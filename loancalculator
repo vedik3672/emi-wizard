@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Wizard - Loan Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .calculator-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+        }
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+        }
+        .tab-active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .tab {
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 5px 5px 0 0;
+            background-color: #e5e7eb;
+        }
+        .hidden {
+            display: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .no-print {
+                display: none;
+            }
+            .card {
+                box-shadow: none;
+                margin-bottom: 30px;
+                break-inside: avoid;
+            }
+        }
+        .comparison-row:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="py-6 px-4">
+    <div class="calculator-container">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-indigo-700 mb-2">EMI Wizard</h1>
+            <p class="text-gray-600">Your complete loan calculation solution</p>
+        </div>
+
+        <!-- Main Calculator Card -->
+        <div class="card mb-8">
+            <div class="card-header flex justify-between items-center">
+                <h2 class="text-xl">Loan Calculator</h2>
+                <div class="flex">
+                    <button id="resetBtn" class="bg-indigo-800 text-white px-3 py-1 rounded mr-2 hover:bg-indigo-900 transition">
+                        <i class="fas fa-redo-alt mr-1"></i> Reset
+                    </button>
+                    <button id="saveBtn" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                        <i class="fas fa-save mr-1"></i> Save
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Inputs Section -->
+                    <div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 mb-2" for="loanAmount">
+                                Loan Amount (₹)
+                                <span class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-gray-500"></i>
+                                    <span class="tooltiptext">Enter the principal loan amount you want to borrow</span>
+                                </span>
+                            </label>
+                            <div class="flex items-center">
+                                <input type="number" id="loanAmount" class="w-full p-2 border border-gray-300 rounded mr-4" value="500000">
+                                <div class="text-gray-700 whitespace-nowrap">₹ 5,00,000</div>
+                            </div>
+                            <input type="range" id="loanAmountSlider" class="slider mt-2" min="10000" max="10000000" step="10000" value="500000">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>₹10K</span>
+                                <span>₹1Cr</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-gray-700 mb-2" for="interestRate">
+                                Interest Rate (% per annum)
+                                <span class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-gray-500"></i>
+                                    <span class="tooltiptext">Enter the annual interest rate</span>
+                                </span>
+                            </label>
+                            <div class="flex items-center">
+                                <input type="number" id="interestRate" class="w-full p-2 border border-gray-300 rounded mr-4" step="0.1" value="10.5">
+                                <div class="text-gray-700 whitespace-nowrap">10.5%</div>
+                            </div>
+                            <input type="range" id="interestRateSlider" class="slider mt-2" min="1" max="30" step="0.1" value="10.5">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>1%</span>
+                                <span>30%</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-gray-700 mb-2" for="loanTenure">
+                                Loan Tenure
+                                <span class="tooltip ml-1">
+                                    <i class="fas fa-info-circle text-gray-500"></i>
+                                    <span class="tooltiptext">Enter the duration of your loan</span>
+                                </span>
+                            </label>
+                            <div class="flex justify-between mb-2">
+                                <div class="flex items-center">
+                                    <input type="radio" id="yearOption" name="tenureType" value="year" checked class="mr-2">
+                                    <label for="yearOption" class="text-gray-700">Years</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="monthOption" name="tenureType" value="month" class="mr-2">
+                                    <label for="monthOption" class="text-gray-700">Months</label>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" id="loanTenure" class="w-full p-2 border border-gray-300 rounded mr-4" value="5">
+                                <div class="text-gray-700 whitespace-nowrap" id="tenureDisplay">5 Years</div>
+                            </div>
+                            <input type="range" id="loanTenureSlider" class="slider mt-2" min="1" max="30" value="5">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1" id="tenureRange">
+                                <span>1 Yr</span>
+                                <span>30 Yrs</span>
+                            </div>
+                        </div>
+
+                        <button id="calculateBtn" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
+                            Calculate EMI
+                        </button>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div>
+                        <div class="bg-gray-100 p-6 rounded-lg mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Loan Summary</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <p class="text-gray-500 text-sm">Monthly EMI</p>
+                                    <p class="text-2xl font-bold text-indigo-700" id="emiAmount">₹ 10,746</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <p class="text-gray-500 text-sm">Total Interest Payable</p>
+                                    <p class="text-2xl font-bold text-orange-500" id="totalInterest">₹ 1,44,751</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <p class="text-gray-500 text-sm">Total Payment</p>
+                                    <p class="text-2xl font-bold text-green-600" id="totalPayment">₹ 6,44,751</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <p class="text-gray-500 text-sm">Interest to Principal Ratio</p>
+                                    <p class="text-2xl font-bold text-purple-600" id="interestRatio">29%</p>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Calculations Card -->
+        <div class="card mb-8" id="savedCalculationsSection">
+            <div class="card-header">
+                <h2 class="text-xl">Saved Calculations</h2>
+            </div>
+            <div class="p-6" id="savedCalculationsContainer">
+                <p class="text-gray-500 text-center py-4" id="noSavedCalc">No saved calculations yet. Use the save button to store your calculations.</p>
+                <div id="savedList" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-700">
+                                    <th class="py-3 px-4 text-left">Date Saved</th>
+                                    <th class="py-3 px-4 text-left">Loan Amount</th>
+                                    <th class="py-3 px-4 text-left">Interest Rate</th>
+                                    <th class="py-3 px-4 text-left">Tenure</th>
+                                    <th class="py-3 px-4 text-left">EMI</th>
+                                    <th class="py-3 px-4 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="savedCalculationsList">
+                                <!-- Saved calculations will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Comparison Card -->
+        <div class="card mb-8" id="comparisonSection">
+            <div class="card-header">
+                <h2 class="text-xl">Loan Comparison</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-500 mb-4">Compare up to 3 different loan scenarios to find the best option for you.</p>
+                <div id="comparisonContainer">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-700">
+                                    <th class="py-3 px-4 text-left">Details</th>
+                                    <th class="py-3 px-4 text-left">Loan 1</th>
+                                    <th class="py-3 px-4 text-left" id="loan2Header">Loan 2</th>
+                                    <th class="py-3 px-4 text-left" id="loan3Header">Loan 3</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTable">
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Loan Amount</td>
+                                    <td class="py-3 px-4" id="comp1Amount">₹ 5,00,000</td>
+                                    <td class="py-3 px-4" id="comp2Amount">-</td>
+                                    <td class="py-3 px-4" id="comp3Amount">-</td>
+                                </tr>
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Interest Rate</td>
+                                    <td class="py-3 px-4" id="comp1Rate">10.5%</td>
+                                    <td class="py-3 px-4" id="comp2Rate">-</td>
+                                    <td class="py-3 px-4" id="comp3Rate">-</td>
+                                </tr>
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Loan Tenure</td>
+                                    <td class="py-3 px-4" id="comp1Tenure">5 Years</td>
+                                    <td class="py-3 px-4" id="comp2Tenure">-</td>
+                                    <td class="py-3 px-4" id="comp3Tenure">-</td>
+                                </tr>
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Monthly EMI</td>
+                                    <td class="py-3 px-4" id="comp1EMI">₹ 10,746</td>
+                                    <td class="py-3 px-4" id="comp2EMI">-</td>
+                                    <td class="py-3 px-4" id="comp3EMI">-</td>
+                                </tr>
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Total Interest</td>
+                                    <td class="py-3 px-4" id="comp1Interest">₹ 1,44,751</td>
+                                    <td class="py-3 px-4" id="comp2Interest">-</td>
+                                    <td class="py-3 px-4" id="comp3Interest">-</td>
+                                </tr>
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Total Payment</td>
+                                    <td class="py-3 px-4" id="comp1Total">₹ 6,44,751</td>
+                                    <td class="py-3 px-4" id="comp2Total">-</td>
+                                    <td class="py-3 px-4" id="comp3Total">-</td>
+                                </tr>
+                                <tr class="comparison-row">
+                                    <td class="py-3 px-4 font-medium">Interest to Principal Ratio</td>
+                                    <td class="py-3 px-4" id="comp1Ratio">29%</td>
+                                    <td class="py-3 px-4" id="comp2Ratio">-</td>
+                                    <td class="py-3 px-4" id="comp3Ratio">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4"></td>
+                                    <td class="py-3 px-4">
+                                        <button class="text-indigo-600 hover:text-indigo-800" id="copyToLoan1">
+                                            <i class="fas fa-copy mr-1"></i> Use Current
+                                        </button>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <button class="text-indigo-600 hover:text-indigo-800" id="copyToLoan2">
+                                            <i class="fas fa-copy mr-1"></i> Use Current
+                                        </button>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <button class="text-indigo-600 hover:text-indigo-800" id="copyToLoan3">
+                                            <i class="fas fa-copy mr-1"></i> Use Current
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-6">
+                        <div class="chart-container">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amortization Schedule Card -->
+        <div class="card mb-8" id="amortizationSection">
+            <div class="card-header">
+                <h2 class="text-xl">Amortization Schedule</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-500 mb-4">Detailed month-by-month breakdown of your loan repayment.</p>
+                
+                <div class="flex mb-4">
+                    <div class="tab tab-active mr-2" id="yearlyTab">Yearly View</div>
+                    <div class="tab" id="monthlyTab">Monthly View</div>
+                </div>
+                
+                <div id="yearlyView">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-700">
+                                    <th class="py-3 px-4 text-left">Year</th>
+                                    <th class="py-3 px-4 text-left">Principal Paid</th>
+                                    <th class="py-3 px-4 text-left">Interest Paid</th>
+                                    <th class="py-3 px-4 text-left">Total Payment</th>
+                                    <th class="py-3 px-4 text-left">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yearlyAmortizationTable">
+                                <!-- Yearly amortization data will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="monthlyView" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-700">
+                                    <th class="py-3 px-4 text-left">Month</th>
+                                    <th class="py-3 px-4 text-left">Principal Paid</th>
+                                    <th class="py-3 px-4 text-left">Interest Paid</th>
+                                    <th class="py-3 px-4 text-left">Total Payment</th>
+                                    <th class="py-3 px-4 text-left">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthlyAmortizationTable">
+                                <!-- Monthly amortization data will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-gray-600 text-sm mt-10">
+            <p>EMI Wizard &copy; 2023 - Your Trusted Loan Calculator</p>
+            <p class="mt-2">For better accessibility, use Google Chrome for optimal experience.</p>
+        </div>
+    </div>
+
+    <!-- Charts.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <script>
+        // Global variables
+        let pieChart = null;
+        let comparisonChart = null;
+        let currentCalculation = {
+            loanAmount: 500000,
+            interestRate: 10.5,
+            loanTenure: 5,
+            tenureType: 'year',
+            emi: 0,
+            totalInterest: 0,
+            totalPayment: 0,
+            interestRatio: 0
+        };
+        let comparisonLoans = [
+            { ...currentCalculation, emi: 10746, totalInterest: 144751, totalPayment: 644751, interestRatio: 29 },
+            { empty: true },
+            { empty: true }
+        ];
+        let savedCalculations = [];
+
+        // DOM Elements
+        const loanAmountInput = document.getElementById('loanAmount');
+        const loanAmountSlider = document.getElementById('loanAmountSlider');
+        const interestRateInput = document.getElementById('interestRate');
+        const interestRateSlider = document.getElementById('interestRateSlider');
+        const loanTenureInput = document.getElementById('loanTenure');
+        const loanTenureSlider = document.getElementById('loanTenureSlider');
+        const yearOption = document.getElementById('yearOption');
+        const monthOption = document.getElementById('monthOption');
+        const tenureDisplay = document.getElementById('tenureDisplay');
+        const tenureRange = document.getElementById('tenureRange');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        
+        // Results elements
+        const emiAmountElement = document.getElementById('emiAmount');
+        const totalInterestElement = document.getElementById('totalInterest');
+        const totalPaymentElement = document.getElementById('totalPayment');
+        const interestRatioElement = document.getElementById('interestRatio');
+
+        // Tab elements
+        const yearlyTab = document.getElementById('yearlyTab');
+        const monthlyTab = document.getElementById('monthlyTab');
+        const yearlyView = document.getElementById('yearlyView');
+        const monthlyView = document.getElementById('monthlyView');
+
+        // Comparison elements
+        const copyToLoan1 = document.getElementById('copyToLoan1');
+        const copyToLoan2 = document.getElementById('copyToLoan2');
+        const copyToLoan3 = document.getElementById('copyToLoan3');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved calculations from localStorage
+            loadSavedCalculations();
+            
+            // Initialize with default calculation
+            calculateEMI();
+            
+            // Initialize charts
+            initCharts();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Input synchronization
+            loanAmountInput.addEventListener('input', function() {
+                loanAmountSlider.value = this.value;
+                updateLoanAmountDisplay();
+            });
+            
+            loanAmountSlider.addEventListener('input', function() {
+                loanAmountInput.value = this.value;
+                updateLoanAmountDisplay();
+            });
+            
+            interestRateInput.addEventListener('input', function() {
+                interestRateSlider.value = this.value;
+                updateInterestRateDisplay();
+            });
+            
+            interestRateSlider.addEventListener('input', function() {
+                interestRateInput.value = this.value;
+                updateInterestRateDisplay();
+            });
+            
+            loanTenureInput.addEventListener('input', function() {
+                loanTenureSlider.value = this.value;
+                updateTenureDisplay();
+            });
+            
+            loanTenureSlider.addEventListener('input', function() {
+                loanTenureInput.value = this.value;
+                updateTenureDisplay();
+            });
+            
+            // Tenure type change
+            yearOption.addEventListener('change', function() {
+                updateTenureType('year');
+            });
+            
+            monthOption.addEventListener('change', function() {
+                updateTenureType('month');
+            });
+            
+            // Button actions
+            calculateBtn.addEventListener('click', calculateEMI);
+            resetBtn.addEventListener('click', resetCalculator);
+            saveBtn.addEventListener('click', saveCalculation);
+            
+            // Tab switching
+            yearlyTab.addEventListener('click', function() {
+                switchTab('yearly');
+            });
+            
+            monthlyTab.addEventListener('click', function() {
+                switchTab('monthly');
+            });
+            
+            // Comparison actions
+            copyToLoan1.addEventListener('click', function() {
+                copyCurrentToComparison(0);
+            });
+            
+            copyToLoan2.addEventListener('click', function() {
+                copyCurrentToComparison(1);
+            });
+            
+            copyToLoan3.addEventListener('click', function() {
+                copyCurrentToComparison(2);
+            });
+        }
+
+        // Calculate EMI and update UI
+        function calculateEMI() {
+            // Get values from inputs
+            const loanAmount = parseFloat(loanAmountInput.value) || 0;
+            const interestRate = parseFloat(interestRateInput.value) || 0;
+            const loanTenure = parseInt(loanTenureInput.value) || 0;
+            const tenureType = yearOption.checked ? 'year' : 'month';
+            
+            // Store current values
+            currentCalculation.loanAmount = loanAmount;
+            currentCalculation.interestRate = interestRate;
+            currentCalculation.loanTenure = loanTenure;
+            currentCalculation.tenureType = tenureType;
+            
+            // Convert tenure to months if in years
+            const tenureInMonths = tenureType === 'year' ? loanTenure * 12 : loanTenure;
+            
+            // Calculate monthly interest rate
+            const monthlyInterestRate = interestRate / (12 * 100);
+            
+            // Calculate EMI
+            let emi = 0;
+            if (monthlyInterestRate > 0 && tenureInMonths > 0) {
+                emi = loanAmount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, tenureInMonths) / 
+                     (Math.pow(1 + monthlyInterestRate, tenureInMonths) - 1);
+            }
+            
+            // Calculate total payment and interest
+            const totalPayment = emi * tenureInMonths;
+            const totalInterest = totalPayment - loanAmount;
+            const interestRatio = (totalInterest / loanAmount) * 100;
+            
+            // Store calculated values
+            currentCalculation.emi = emi;
+            currentCalculation.totalInterest = totalInterest;
+            currentCalculation.totalPayment = totalPayment;
+            currentCalculation.interestRatio = interestRatio;
+            
+            // Update UI
+            emiAmountElement.textContent = '₹ ' + formatNumber(emi.toFixed(0));
+            totalInterestElement.textContent = '₹ ' + formatNumber(totalInterest.toFixed(0));
+            totalPaymentElement.textContent = '₹ ' + formatNumber(totalPayment.toFixed(0));
+            interestRatioElement.textContent = interestRatio.toFixed(0) + '%';
+            
+            // Update pie chart
+            updatePieChart(loanAmount, totalInterest);
+            
+            // Generate amortization schedule
+            generateAmortizationSchedule(loanAmount, emi, monthlyInterestRate, tenureInMonths);
+            
+            // Update comparison table
+            copyCurrentToComparison(0);
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Pie chart for principal vs interest
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Principal', 'Interest'],
+                    datasets: [{
+                        data: [500000, 144751],
+                        backgroundColor: ['#4f46e5', '#f97316'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Bar chart for comparison
+            const compCtx = document.getElementById('comparisonChart').getContext('2d');
+            comparisonChart = new Chart(compCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Loan 1', 'Loan 2', 'Loan 3'],
+                    datasets: [
+                        {
+                            label: 'Principal',
+                            data: [500000, 0, 0],
+                            backgroundColor: '#4f46e5'
+                        },
+                        {
+                            label: 'Interest',
+                            data: [144751, 0, 0],
+                            backgroundColor: '#f97316'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update pie chart with new data
+        function updatePieChart(principal, interest) {
+            if (pieChart) {
+                pieChart.data.datasets[0].data = [principal, interest];
+                pieChart.update();
+            }
+        }
+
+        // Update comparison chart
+        function updateComparisonChart() {
+            if (comparisonChart) {
+                // Principal values
+                const principalData = comparisonLoans.map(loan => loan.empty ? 0 : loan.loanAmount);
+                
+                // Interest values
+                const interestData = comparisonLoans.map(loan => loan.empty ? 0 : loan.totalInterest);
+                
+                // Update chart data
+                comparisonChart.data.datasets[0].data = principalData;
+                comparisonChart.data.datasets[1].data = interestData;
+                
+                comparisonChart.update();
+            }
+        }
+
+        // Generate amortization schedule
+        function generateAmortizationSchedule(principal, emi, monthlyInterestRate, tenureInMonths) {
+            const yearlyTable = document.getElementById('yearlyAmortizationTable');
+            const monthlyTable = document.getElementById('monthlyAmortizationTable');
+            
+            // Clear tables
+            yearlyTable.innerHTML = '';
+            monthlyTable.innerHTML = '';
+            
+            let remainingPrincipal = principal;
+            let yearlyPrincipal = 0;
+            let yearlyInterest = 0;
+            let yearCounter = 1;
+            
+            // Generate monthly data
+            for (let month = 1; month <= tenureInMonths; month++) {
+                // Calculate values for this month
+                const interestForMonth = remainingPrincipal * monthlyInterestRate;
+                const principalForMonth = emi - interestForMonth;
+                
+                // Update running totals
+                remainingPrincipal -= principalForMonth;
+                yearlyPrincipal += principalForMonth;
+                yearlyInterest += interestForMonth;
+                
+                // Add to monthly table
+                const monthRow = document.createElement('tr');
+                monthRow.className = 'comparison-row';
+                monthRow.innerHTML = `
+                    <td class="py-3 px-4">${month}</td>
+                    <td class="py-3 px-4">₹ ${formatNumber(principalForMonth.toFixed(0))}</td>
+                    <td class="py-3 px-4">₹ ${formatNumber(interestForMonth.toFixed(0))}</td>
+                    <td class="py-3 px-4">₹ ${formatNumber(emi.toFixed(0))}</td>
+                    <td class="py-3 px-4">₹ ${formatNumber(Math.max(0, remainingPrincipal).toFixed(0))}</td>
+                `;
+                monthlyTable.appendChild(monthRow);
+                
+                // If it's the last month of a year or the final month, add to yearly table
+                if (month % 12 === 0 || month === tenureInMonths) {
+                    const yearRow = document.createElement('tr');
+                    yearRow.className = 'comparison-row';
+                    yearRow.innerHTML = `
+                        <td class="py-3 px-4">${yearCounter}</td>
+                        <td class="py-3 px-4">₹ ${formatNumber(yearlyPrincipal.toFixed(0))}</td>
+                        <td class="py-3 px-4">₹ ${formatNumber(yearlyInterest.toFixed(0))}</td>
+                        <td class="py-3 px-4">₹ ${formatNumber((yearlyPrincipal + yearlyInterest).toFixed(0))}</td>
+                        <td class="py-3 px-4">₹ ${formatNumber(Math.max(0, remainingPrincipal).toFixed(0))}</td>
+                    `;
+                    yearlyTable.appendChild(yearRow);
+                    
+                    yearCounter++;
+                    yearlyPrincipal = 0;
+                    yearlyInterest = 0;
+                }
+            }
+        }
+
+        // Copy current calculation to comparison table
+        function copyCurrentToComparison(index) {
+            comparisonLoans[index] = {
+                ...currentCalculation,
+                empty: false
+            };
+            
+            // Update comparison table UI
+            updateComparisonTable();
+            
+            // Update comparison chart
+            updateComparisonChart();
+        }
+
+        // Update comparison table UI
+        function updateComparisonTable() {
+            // Loan 1
+            document.getElementById('comp1Amount').textContent = comparisonLoans[0].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[0].loanAmount);
+            document.getElementById('comp1Rate').textContent = comparisonLoans[0].empty ? '-' : comparisonLoans[0].interestRate + '%';
+            document.getElementById('comp1Tenure').textContent = comparisonLoans[0].empty ? '-' : 
+                comparisonLoans[0].loanTenure + ' ' + (comparisonLoans[0].tenureType === 'year' ? 'Years' : 'Months');
+            document.getElementById('comp1EMI').textContent = comparisonLoans[0].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[0].emi.toFixed(0));
+            document.getElementById('comp1Interest').textContent = comparisonLoans[0].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[0].totalInterest.toFixed(0));
+            document.getElementById('comp1Total').textContent = comparisonLoans[0].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[0].totalPayment.toFixed(0));
+            document.getElementById('comp1Ratio').textContent = comparisonLoans[0].empty ? '-' : comparisonLoans[0].interestRatio.toFixed(0) + '%';
+            
+            // Loan 2
+            document.getElementById('comp2Amount').textContent = comparisonLoans[1].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[1].loanAmount);
+            document.getElementById('comp2Rate').textContent = comparisonLoans[1].empty ? '-' : comparisonLoans[1].interestRate + '%';
+            document.getElementById('comp2Tenure').textContent = comparisonLoans[1].empty ? '-' : 
+                comparisonLoans[1].loanTenure + ' ' + (comparisonLoans[1].tenureType === 'year' ? 'Years' : 'Months');
+            document.getElementById('comp2EMI').textContent = comparisonLoans[1].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[1].emi.toFixed(0));
+            document.getElementById('comp2Interest').textContent = comparisonLoans[1].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[1].totalInterest.toFixed(0));
+            document.getElementById('comp2Total').textContent = comparisonLoans[1].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[1].totalPayment.toFixed(0));
+            document.getElementById('comp2Ratio').textContent = comparisonLoans[1].empty ? '-' : comparisonLoans[1].interestRatio.toFixed(0) + '%';
+            
+            // Loan 3
+            document.getElementById('comp3Amount').textContent = comparisonLoans[2].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[2].loanAmount);
+            document.getElementById('comp3Rate').textContent = comparisonLoans[2].empty ? '-' : comparisonLoans[2].interestRate + '%';
+            document.getElementById('comp3Tenure').textContent = comparisonLoans[2].empty ? '-' : 
+                comparisonLoans[2].loanTenure + ' ' + (comparisonLoans[2].tenureType === 'year' ? 'Years' : 'Months');
+            document.getElementById('comp3EMI').textContent = comparisonLoans[2].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[2].emi.toFixed(0));
+            document.getElementById('comp3Interest').textContent = comparisonLoans[2].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[2].totalInterest.toFixed(0));
+            document.getElementById('comp3Total').textContent = comparisonLoans[2].empty ? '-' : '₹ ' + formatNumber(comparisonLoans[2].totalPayment.toFixed(0));
+            document.getElementById('comp3Ratio').textContent = comparisonLoans[2].empty ? '-' : comparisonLoans[2].interestRatio.toFixed(0) + '%';
+            
+            // Update headers with appropriate colors
+            document.getElementById('loan2Header').style.color = comparisonLoans[1].empty ? '' : '#4f46e5';
+            document.getElementById('loan3Header').style.color = comparisonLoans[2].empty ? '' : '#4f46e5';
+        }
+
+        // Save current calculation
+        function saveCalculation() {
+            const timestamp = new Date().toISOString();
+            const newSave = {
+                id: Date.now(),
+                timestamp: timestamp,
+                ...currentCalculation
+            };
+            
+            savedCalculations.push(newSave);
+            localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
+            
+            updateSavedCalculationsList();
+            
+            // Show notification
+            alert('Calculation saved successfully!');
+        }
+
+        // Load saved calculations from localStorage
+        function loadSavedCalculations() {
+            const saved = localStorage.getItem('savedCalculations');
+            if (saved) {
+                savedCalculations = JSON.parse(saved);
+                updateSavedCalculationsList();
+            }
+        }
+
+        // Update the saved calculations list in UI
+        function updateSavedCalculationsList() {
+            const savedList = document.getElementById('savedCalculationsList');
+            const noSavedCalc = document.getElementById('noSavedCalc');
+            const savedListContainer = document.getElementById('savedList');
+            
+            if (savedCalculations.length === 0) {
+                noSavedCalc.classList.remove('hidden');
+                savedListContainer.classList.add('hidden');
+                return;
+            }
+            
+            noSavedCalc.classList.add('hidden');
+            savedListContainer.classList.remove('hidden');
+            
+            // Clear the list
+            savedList.innerHTML = '';
+            
+            // Add each saved calculation
+            savedCalculations.forEach(calc => {
+                const row = document.createElement('tr');
+                row.className = 'comparison-row';
+                
+                const date = new Date(calc.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                
+                row.innerHTML = `
+                    <td class="py-3 px-4">${formattedDate}</td>
+                    <td class="py-3 px-4">₹ ${formatNumber(calc.loanAmount)}</td>
+                    <td class="py-3 px-4">${calc.interestRate}%</td>
+                    <td class="py-3 px-4">${calc.loanTenure} ${calc.tenureType === 'year' ? 'Years' : 'Months'}</td>
+                    <td class="py-3 px-4">₹ ${formatNumber(calc.emi.toFixed(0))}</td>
+                    <td class="py-3 px-4">
+                        <button class="text-indigo-600 hover:text-indigo-800 mr-2 load-calculation" data-id="${calc.id}">
+                            <i class="fas fa-sync-alt"></i> Load
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 delete-calculation" data-id="${calc.id}">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </td>
+                `;
+                
+                savedList.appendChild(row);
+            });
+            
+            // Add event listeners to buttons
+            document.querySelectorAll('.load-calculation').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    loadCalculation(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-calculation').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    deleteCalculation(id);
+                });
+            });
+        }
+
+        // Load a saved calculation
+        function loadCalculation(id) {
+            const calc = savedCalculations.find(c => c.id === id);
+            if (!calc) return;
+            
+            // Set values in UI
+            loanAmountInput.value = calc.loanAmount;
+            loanAmountSlider.value = calc.loanAmount;
+            interestRateInput.value = calc.interestRate;
+            interestRateSlider.value = calc.interestRate;
+            loanTenureInput.value = calc.loanTenure;
+            loanTenureSlider.value = calc.loanTenure;
+            
+            if (calc.tenureType === 'year') {
+                yearOption.checked = true;
+                monthOption.checked = false;
+            } else {
+                yearOption.checked = false;
+                monthOption.checked = true;
+            }
+            
+            // Update displays
+            updateLoanAmountDisplay();
+            updateInterestRateDisplay();
+            updateTenureDisplay();
+            
+            // Recalculate
+            calculateEMI();
+        }
+
+        // Delete a saved calculation
+        function deleteCalculation(id) {
+            if (confirm('Are you sure you want to delete this saved calculation?')) {
+                savedCalculations = savedCalculations.filter(c => c.id !== id);
+                localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
+                updateSavedCalculationsList();
+            }
+        }
+
+        // Reset calculator to default values
+        function resetCalculator() {
+            loanAmountInput.value = 500000;
+            loanAmountSlider.value = 500000;
+            interestRateInput.value = 10.5;
+            interestRateSlider.value = 10.5;
+            loanTenureInput.value = 5;
+            loanTenureSlider.value = 5;
+            yearOption.checked = true;
+            monthOption.checked = false;
+            
+            updateLoanAmountDisplay();
+            updateInterestRateDisplay();
+            updateTenureType('year');
+            calculateEMI();
+        }
+
+        // Update tenure type (years/months)
+        function updateTenureType(type) {
+            if (type === 'year') {
+                loanTenureSlider.setAttribute('min', '1');
+                loanTenureSlider.setAttribute('max', '30');
+                loanTenureSlider.setAttribute('step', '1');
+                tenureRange.innerHTML = '<span>1 Yr</span><span>30 Yrs</span>';
+                
+                // If current value is in months, convert to approximate years
+                if (!yearOption.checked) {
+                    const currentMonths = parseInt(loanTenureInput.value) || 0;
+                    const years = Math.max(1, Math.min(30, Math.round(currentMonths / 12)));
+                    loanTenureInput.value = years;
+                    loanTenureSlider.value = years;
+                }
+            } else {
+                loanTenureSlider.setAttribute('min', '1');
+                loanTenureSlider.setAttribute('max', '360');
+                loanTenureSlider.setAttribute('step', '1');
+                tenureRange.innerHTML = '<span>1 Mo</span><span>360 Mos</span>';
+                
+                // If current value is in years, convert to months
+                if (yearOption.checked) {
+                    const currentYears = parseInt(loanTenureInput.value) || 0;
+                    const months = Math.min(360, currentYears * 12);
+                    loanTenureInput.value = months;
+                    loanTenureSlider.value = months;
+                }
+            }
+            
+            updateTenureDisplay();
+        }
+
+        // Update loan amount display
+        function updateLoanAmountDisplay() {
+            const amount = parseFloat(loanAmountInput.value) || 0;
+            const amountDisplay = document.querySelector('#loanAmount + div');
+            amountDisplay.textContent = '₹ ' + formatNumber(amount);
+        }
+
+        // Update interest rate display
+        function updateInterestRateDisplay() {
+            const rate = parseFloat(interestRateInput.value) || 0;
+            const rateDisplay = document.querySelector('#interestRate + div');
+            rateDisplay.textContent = rate + '%';
+        }
+
+        // Update tenure display
+        function updateTenureDisplay() {
+            const tenure = parseInt(loanTenureInput.value) || 0;
+            const type = yearOption.checked ? 'Years' : 'Months';
+            tenureDisplay.textContent = tenure + ' ' + type;
+        }
+
+        // Switch between yearly and monthly amortization views
+        function switchTab(view) {
+            if (view === 'yearly') {
+                yearlyTab.classList.add('tab-active');
+                monthlyTab.classList.remove('tab-active');
+                yearlyView.classList.remove('hidden');
+                monthlyView.classList.add('hidden');
+            } else {
+                yearlyTab.classList.remove('tab-active');
+                monthlyTab.classList.add('tab-active');
+                yearlyView.classList.add('hidden');
+                monthlyView.classList.remove('hidden');
+            }
+        }
+
+        // Format number with commas for thousands
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
+</body>
+</html>
